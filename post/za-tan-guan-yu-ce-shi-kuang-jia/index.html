@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>杂谈 - 关于测试框架 | sl 的 blog</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://WSL0809.github.io/favicon.ico?v=1772707196028">
+<link rel="stylesheet" href="https://WSL0809.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="抽象测试框架
+自动化测试框架可以抽象出几种角色，任何测试框架都是
+
+test_data
+data_extractor
+test_executer
+
+1. 抽象视角下的三种角色
+先假设被测系统可以抽象成一个带上下文的函数：
+SUT : (In..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://WSL0809.github.io">
+        <img src="https://WSL0809.github.io/images/avatar.png?v=1772707196028" class="site-logo">
+        <h1 class="site-title">sl 的 blog</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://WSL0809.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">杂谈 - 关于测试框架</h2>
+            <div class="post-date">2025-12-19</div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="抽象测试框架">抽象测试框架</h1>
+<p>自动化测试框架可以抽象出几种角色，任何测试框架都是</p>
+<ul>
+<li><strong>test_data</strong></li>
+<li><strong>data_extractor</strong></li>
+<li><strong>test_executer</strong></li>
+</ul>
+<h2 id="1-抽象视角下的三种角色">1. 抽象视角下的三种角色</h2>
+<p>先假设<strong>被测系统</strong>可以抽象成一个带上下文的函数：</p>
+<pre><code class="language-text">SUT : (Input, Context) -&gt; Output
+</code></pre>
+<p>在这个层面，我们完全不关心 HTTP 还是 gRPC，甚至不关心它是不是代码，只把它当作一个黑盒函数</p>
+<h3 id="1test_data测试意图的抽象表示">1）test_data：测试意图的抽象表示</h3>
+<p>在抽象层面，<strong>test_data 不是文件，不是表格，而是测试意图的一个元素</strong>。在某个前置条件下，对 SUT 做某种操作，应该满足某种性质。也就是说，抽象的 test_data 至少携带三类语义（不是字段，是语义）：</p>
+<ol>
+<li>
+<p><strong>前置世界（上下文）</strong> ：</p>
+<ul>
+<li>系统处于怎样的业务状态（用户有多少余额、订单在什么阶段…）</li>
+</ul>
+</li>
+<li>
+<p>​<strong>操作/刺激</strong>：</p>
+<ul>
+<li>我要对 SUT 施加什么操作（调用哪个能力，传入什么意图）</li>
+</ul>
+</li>
+<li>
+<p>​<strong>期望性质</strong>（不一定是具体值，可以是性质）：</p>
+<ul>
+<li>例如：余额减少但不为负数、列表长度增加 1、满足某个不变量</li>
+</ul>
+</li>
+</ol>
+<p>现在的test_data，本质就是<strong>对 SUT 行为的一条约束 / 场景描述</strong>，而不是任何具体的数据结构。</p>
+<hr>
+<h3 id="2data_extractor从抽象测试用例到可执行测试的映射">2）data_extractor：从抽象测试用例到可执行测试的映射</h3>
+<p>在这个高度，data_extractor 可以看成是一个​<strong>纯函数</strong>：</p>
+<pre><code class="language-text">data_extractor : TestSpecSpace -&gt; ExecutableTestSpace
+</code></pre>
+<p>也就是说，它负责把人类视角 / 业务视角的测试意图，翻译成执行引擎能直接执行的测试程序。</p>
+<p>在抽象层，它做的是<strong>语义层的编译</strong>，而不是单纯的解析文件。</p>
+<p>你可以把它类比成：</p>
+<ul>
+<li>​<strong>编译器</strong>：从高级语言代码 → 中间表示（IR）</li>
+<li><strong>模型到模型的转换器</strong>：从业务场景模型 → 测试执行模型</li>
+</ul>
+<p>它需要完成的抽象责任，比如：</p>
+<ol>
+<li>
+<p>把业务世界的概念映射到调用世界的概念</p>
+<ul>
+<li>如：<code>用户=黄金会员</code>​ → 某个 <code>userId</code> + 获取 token 的方式</li>
+<li>​<code>下单成功</code> → 一系列对 SUT 的调用序列（准备环境 + 下单）</li>
+</ul>
+</li>
+<li>
+<p>把性质翻译成可执行断言或检查步骤</p>
+<ul>
+<li>
+<p>如：<br>
+余额减少但不为负数 →</p>
+<ul>
+<li>Step A: 调前查询余额</li>
+<li>Step B: 调用支付接口</li>
+<li>Step C: 再查余额 + 计算差值 + 判断结果</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>生成一个​<strong>结构化的可执行测试脚本</strong>（仍可非常抽象，不等于具体语言），例如：</p>
+</li>
+</ol>
+<pre><code class="language-text">ExecutableTest =
+  { pre_steps, invoke_steps, post_checks, expected_relations, … }
+</code></pre>
+<p>此时我们完全不关心这个 ExecutableTest 是 Python 对象、XML 文件还是别的什么，只关心它在语义上是一种​<strong>对 SUT 的操作与检查序列</strong>。</p>
+<hr>
+<h3 id="3test_executer解释-运行可执行测试的语义">3）test_executer：解释 / 运行可执行测试的语义</h3>
+<p>在这个高度上，​<strong>test_executer 是一个解释器</strong>：</p>
+<pre><code class="language-text">test_executer : ExecutableTestSpace × SUT -&gt; TestResult
+</code></pre>
+<p>它的职责是：</p>
+<blockquote>
+<p>给我一个可执行测试描述（ExecutableTest）和一套被测系统实现，我根据这个描述去驱动系统，并产生一个带有判定的结果。</p>
+</blockquote>
+<p>这里的关键点：</p>
+<ul>
+<li>
+<p>test_executer ​<strong>只懂 ExecutableTest 这个中间表示的语义</strong>：</p>
+<ul>
+<li>例如：<code>pre_steps</code> 代表前置操作序列</li>
+<li>​<code>invoke_steps</code> 代表主要调用</li>
+<li>​<code>post_checks</code> 代表检查</li>
+</ul>
+</li>
+<li>
+<p>它不需要也不应该理解业务含义，只负责：</p>
+<ul>
+<li>按顺序/规则执行这些步骤</li>
+<li>收集观察到的 Output / 中间状态</li>
+<li>交给检查逻辑（可以包含在 ExecutableTest 里，也可以进一步抽象成 oracle）来判断</li>
+</ul>
+</li>
+</ul>
+<p>换句话说，这个 test_executer 已经抽象成：</p>
+<blockquote>
+<p>一种对测试中间语言的解释器 / 虚拟机。</p>
+</blockquote>
+<p>这在概念上非常像：</p>
+<ul>
+<li>
+<p>Programming Language:</p>
+<ul>
+<li>Source Code（test_data）</li>
+<li>Compiler（data_extractor）</li>
+<li>VM / Runtime（test_executer）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="2-把三层抽象到你完全不关心具体实现的样子">2. 把三层抽象到你完全不关心具体实现的样子</h2>
+<p>如果把刚才的东西压缩成纯概念图，就是：</p>
+<pre><code class="language-text">           +------------------+
+           |   TestSpecSpace  |   （抽象测试规格 / 测试意图）
+           +---------+--------+
+                     |
+                     |  data_extractor : TestSpec -&gt; ExecutableTest
+                     v
+           +-----------------------+
+           | ExecutableTestSpace   |   （测试中间表示 / 测试脚本）
+           +-----------+-----------+
+                       |
+                       |  test_executer : ExecutableTest × SUT -&gt; TestResult
+                       v
+           +------------------+
+           |   TestResult     |   （通过 / 未通过 / 不确定 + 观测信息）
+           +------------------+
+</code></pre>
+<p>这个图里，你关心的只有​<strong>三个集合/空间<strong>和</strong>两个映射</strong>​：</p>
+<ul>
+<li>
+<p>集合（空间）：</p>
+<ul>
+<li>​<code>TestSpecSpace</code>​：抽象 test_data 所在的世界</li>
+<li>​<code>ExecutableTestSpace</code>​：data_extractor 输出的可执行测试世界</li>
+<li>​<code>TestResult</code>：执行结果空间</li>
+</ul>
+</li>
+<li>
+<p>映射：</p>
+<ul>
+<li>​<code>data_extractor</code>：规格 → 可执行测试</li>
+<li>​<code>test_executer</code>：可执行测试 + SUT → 结果</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="1-先搭一个极简的http-领域模型">1. 先搭一个极简的HTTP 领域模型</h2>
+<p>假设被测系统（SUT）里有三类 HTTP 操作（仍然是抽象的）：</p>
+<ul>
+<li>​<code>Login</code>​：<br>
+输入：<code>(username, password)</code>​<br>
+输出：<code>token</code></li>
+<li>​<code>CreateOrder</code>​：<br>
+输入：<code>(token, sku_list)</code>​<br>
+输出：<code>order_id</code></li>
+<li>​<code>PayOrder</code>​：<br>
+输入：<code>(token, order_id)</code>​<br>
+输出：<code>payment_result</code></li>
+</ul>
+<p>在模型层，你可以把每个接口抽象成一个​<strong>操作符</strong>：</p>
+<pre><code class="language-text">Login       : Cred -&gt; Token
+CreateOrder : Token × SkuList -&gt; OrderId
+PayOrder    : Token × OrderId -&gt; PayResult
+</code></pre>
+<p>这些只是函数签名式的类型，没有任何协议细节。</p>
+<hr>
+<h2 id="2-抽象层面的-test_data一条场景规格">2. 抽象层面的 <code>test_data</code>：一条场景规格</h2>
+<p>我们要做的测试场景是：</p>
+<blockquote>
+<p>一个黄金会员成功登录，创建订单并支付成功。</p>
+</blockquote>
+<p>这个时候，​<strong>test_data 不是任何文件，而是一个场景规格（ScenarioSpec）</strong> ​。<br>
+可以把它理解成一个带依赖的​<strong>步骤图 + 性质约束</strong>。</p>
+<h3 id="21-把-test_data-看成一个有向图抽象">2.1 把 test_data 看成一个有向图（抽象）</h3>
+<p>定义一个抽象的 <code>TestSpec</code> 类型：</p>
+<pre><code class="language-text">TestSpec = (Steps, Edges, Properties)
+</code></pre>
+<ul>
+<li>​<code>Steps</code>：一组抽象步骤节点，每个节点只是说明调用哪个操作符、扮演什么角色，不带具体值</li>
+<li>​<code>Edges</code>：步骤之间的依赖关系（谁的输出喂给谁）</li>
+<li>​<code>Properties</code>：对整个场景的期望性质（不是具体字段值，而是判断规则）</li>
+</ul>
+<p>对我们这个 HTTP 场景，一个可能的 <code>TestSpec</code> 是：</p>
+<pre><code class="language-text">Steps =
+  L: Login( user_role = GOLD_MEMBER )
+  C: CreateOrder( actor = L.user, items = {skuA, skuB} )
+  P: PayOrder( actor = L.user, target_order = C.order )
+
+Edges =
+  L.token      -&gt; C.token
+  L.token      -&gt; P.token
+  C.order_id   -&gt; P.order_id
+
+Properties =
+  P.payment_result.status == SUCCESS
+  balance_after(L.user) = balance_before(L.user) - order_amount(C.order)
+</code></pre>
+<p>注意这里：</p>
+<ul>
+<li>​<code>user_role = GOLD_MEMBER</code>​ 这种东西是​<strong>业务语义</strong>，还不是具体 userId</li>
+<li>​<code>skuA</code>​、<code>skuB</code> 也可以只是抽象商品标签，不是具体 sku 编号</li>
+<li>​<code>L.token</code>​、<code>C.order_id</code>​ 是​<strong>符号变量</strong>，只是说P 这个步骤依赖 L、C 的输出</li>
+</ul>
+<p><strong>这就是抽象 test_data</strong>：<br>
+一个图 + 约束的对象，描述了要怎么走场景、场景里数据是怎么流动的、以及期待满足什么性质。<br>
+完全不涉及实现细节。</p>
+<hr>
+<h2 id="3-抽象层面的-data_extractor规格-可执行测试">3. 抽象层面的 <code>data_extractor</code>：规格 → 可执行测试</h2>
+<p>现在看 <code>data_extractor</code>。</p>
+<p>在模型层，它就是一个​<strong>函数</strong>：</p>
+<pre><code class="language-text">data_extractor : TestSpec -&gt; ExecutableTest
+</code></pre>
+<p>我们再给 <code>ExecutableTest</code> 一个抽象定义，比如：</p>
+<pre><code class="language-text">ExecutableTest = (ConcreteSteps, Order, Checkers)
+</code></pre>
+<ul>
+<li>​<code>ConcreteSteps</code>​：带<strong>已绑定参数</strong>的步骤</li>
+<li>​<code>Order</code>：执行顺序 / 拓扑排序结果</li>
+<li>​<code>Checkers</code>：可执行的检查规则（可能还是抽象的表达式树）</li>
+</ul>
+<p>对刚才的那个 <code>TestSpec</code>​，<code>data_extractor</code> 在抽象层大致做三件事：</p>
+<h3 id="31-语义绑定从角色标签到具体值空间的投影">3.1 语义绑定（从角色/标签到具体值空间的投影）</h3>
+<p>例如：</p>
+<pre><code class="language-text">bind_user(GOLD_MEMBER) → some_user_id ∈ UserIdSpace
+bind_sku(skuA)         → some_sku_code_A ∈ SkuSpace
+bind_sku(skuB)         → some_sku_code_B ∈ SkuSpace
+</code></pre>
+<p>这一步的抽象含义是：</p>
+<blockquote>
+<p>从业务标签空间映射到系统可接受的值空间。</p>
+</blockquote>
+<p>我们完全不说这个映射怎么查，是表还是服务，只说它在数学上是一个映射函数。</p>
+<h3 id="32-把依赖图转成可执行步骤-变量绑定">3.2 把依赖图转成可执行步骤 + 变量绑定</h3>
+<p>得到的 <code>ConcreteSteps</code> 可能长这样（仍然抽象）：</p>
+<pre><code class="language-text">ConcreteSteps =
+  L: Login( username = some_user_id, password = some_pwd )
+  C: CreateOrder( token = L.token, sku_list = [sku_code_A, sku_code_B] )
+  P: PayOrder( token = L.token, order_id = C.order_id )
+</code></pre>
+<p>此时你还是只知道：</p>
+<ul>
+<li>每个步骤要调用哪个操作符（Login / CreateOrder / PayOrder）</li>
+<li>每个实参从哪里来（常量、绑定结果、前序步骤输出）</li>
+</ul>
+<h3 id="33-把性质表达式翻译成可执行检查器">3.3 把性质表达式翻译成可执行检查器</h3>
+<p>比如 <code>Properties</code> 中的性质：</p>
+<pre><code class="language-text">P.payment_result.status == SUCCESS
+balance_after(L.user) = balance_before(L.user) - order_amount(C.order)
+</code></pre>
+<p>被 <code>data_extractor</code>​ 翻译成某种<strong>可执行检查表达式树</strong>：</p>
+<pre><code class="language-text">Checkers =
+  checker1: (P.payment_result.status) == SUCCESS
+  checker2: (balance_after) == (balance_before - order_amount)
+</code></pre>
+<p>最终，<code>data_extractor</code>​ 输出一个纯抽象的 <code>ExecutableTest</code>：</p>
+<pre><code class="language-text">ExecutableTest =
+  ConcreteSteps = {L, C, P}
+  Order         = [L, C, P]  （来自 Edges 的拓扑排序）
+  Checkers      = {checker1, checker2}
+</code></pre>
+<p><strong>这里的关键点：</strong></p>
+<ul>
+<li>依然没落到文件、框架，只是在说有一个中间表示（ExecutableTest）</li>
+<li>​<code>ExecutableTest</code>​ 是 <code>test_executer</code> 唯一需要理解的东西</li>
+</ul>
+<hr>
+<h2 id="4-抽象层面的-test_executer解释执行-executabletest">4. 抽象层面的 <code>test_executer</code>：解释/执行 ExecutableTest</h2>
+<p>在模型层，<code>test_executer</code> 是一个解释器/运行时：</p>
+<pre><code class="language-text">test_executer : ExecutableTest × SUT -&gt; TestResult
+</code></pre>
+<p>我们给 <code>TestResult</code> 一个很抽象的定义：</p>
+<pre><code class="language-text">TestResult = (Verdict, Observations)
+</code></pre>
+<ul>
+<li>​<code>Verdict</code> ∈ { PASS, FAIL, INCONCLUSIVE }</li>
+<li>​<code>Observations</code>：执行过程中产生的所有可观测信息（响应、状态快照、时间等）</li>
+</ul>
+<h3 id="41-对依赖的抽象处理方式">4.1 对依赖的抽象处理方式</h3>
+<p>面对 <code>ExecutableTest</code>​ 中的 <code>Order</code>​ + 引用（<code>L.token</code>​、<code>C.order_id</code>​），<code>test_executer</code> 的抽象语义可以描述为：</p>
+<ol>
+<li>按 <code>Order</code>​ <strong>拓扑顺序</strong>执行每个 Step</li>
+<li>每执行完一个 Step，就把它的输出放入一个环境 <code>Env</code> 中</li>
+<li>后续 Step 在执行前，从 <code>Env</code> 里按引用去取值：</li>
+</ol>
+<pre><code class="language-text">Env₀ = ∅
+(L_out, Env₁) = eval_step(L, Env₀, SUT)
+(C_out, Env₂) = eval_step(C, Env₁, SUT)
+(P_out, Env₃) = eval_step(P, Env₂, SUT)
+</code></pre>
+<p>这里的 <code>eval_step</code> 只是一个抽象函数：</p>
+<pre><code class="language-text">eval_step : Step × Env × SUT -&gt; (StepOutput, Env')
+</code></pre>
+<p>它的语义是：</p>
+<blockquote>
+<p>在给定环境下解释这个步骤描述，去驱动 SUT，并把新产生的输出写回环境。</p>
+</blockquote>
+<h3 id="42-对性质检查的抽象处理方式">4.2 对性质检查的抽象处理方式</h3>
+<p>执行完所有 Step 后，<code>test_executer</code>​ 拿着 <code>Env₃</code>​ 和 <code>Checkers</code> 去做判断：</p>
+<pre><code class="language-text">verdict = run_all_checkers(Checkers, Env₃)
+</code></pre>
+<p>其中每个 Checker 是一个​<strong>布尔表达式</strong>：</p>
+<pre><code class="language-text">Checker : Env -&gt; Bool
+</code></pre>
+<p>所有 Checker 都为真 → PASS<br>
+有 Checker 为假 → FAIL<br>
+其他错误/不确定情况 → INCONCLUSIVE（比如依赖步骤执行失败）</p>
+<p>最终得到一个抽象的 <code>TestResult</code>：</p>
+<pre><code class="language-text">TestResult =
+  Verdict = PASS
+  Observations = {
+    (L, L_out),
+    (C, C_out),
+    (P, P_out),
+    logs, metrics, ...
+  }
+</code></pre>
+<hr>
+<h2 id="5-把这一切再对回最开始提到的的三层角色">5. 把这一切再对回最开始提到的的三层角色</h2>
+<ol>
+<li>
+<p>​<strong>​<code>test_data</code>​</strong>​ <strong>（抽象测试数据）</strong></p>
+<ul>
+<li>
+<p>是 <code>TestSpec</code> 空间里的一个元素：</p>
+<ul>
+<li>一个描述场景步骤 + 依赖 + 期望性质的<strong>抽象规格</strong></li>
+</ul>
+</li>
+<li>
+<p>和文件/格式无关，只是一个逻辑对象</p>
+</li>
+</ul>
+</li>
+<li>
+<p>​<strong>​<code>data_extractor</code>​</strong></p>
+<ul>
+<li>
+<p>是一个映射：</p>
+<pre><code class="language-text">TestSpec -&gt; ExecutableTest
+</code></pre>
+</li>
+<li>
+<p>负责：</p>
+<ul>
+<li>把业务标签/角色绑定到具体值空间</li>
+<li>把依赖图转为具体的执行步骤和参数绑定</li>
+<li>把性质表达式转成可执行的 Checker</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>​<strong>​<code>test_executer</code>​</strong></p>
+<ul>
+<li>
+<p>是一个解释器：</p>
+<pre><code class="language-text">ExecutableTest × SUT -&gt; TestResult
+</code></pre>
+</li>
+<li>
+<p>负责：</p>
+<ul>
+<li>按依赖顺序执行步骤</li>
+<li>在环境里传播步骤之间的依赖数据</li>
+<li>执行 Checker 得出最终 Verdict</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>‍</p>
+<hr>
+<h2 id="4-这套框架的通用性边界在哪里">4. 这套框架的通用性边界在哪里？</h2>
+<p>从理论上说，这样设计的通用框架是可行的，而且足够抽象。但也有几个边界和取舍要提前想清楚：</p>
+<h3 id="41-testspec-的抽象度抽太高-vs-抽太低">4.1 TestSpec 的抽象度：抽太高 vs 抽太低</h3>
+<ul>
+<li>
+<p>​<strong>抽太高</strong>：</p>
+<ul>
+<li>所有东西都是抽象操作 + 标签，</li>
+<li>Binder 会变得非常复杂，几乎相当于重写一套业务编排逻辑。</li>
+</ul>
+</li>
+<li>
+<p>​<strong>抽太低</strong>：</p>
+<ul>
+<li>TestSpec 变成HTTP 请求描述清单，又容易退化成普通接口测试框架，失去抽象价值。</li>
+</ul>
+</li>
+</ul>
+<p>​<strong>比较现实的做法</strong>：</p>
+<ul>
+<li>
+<p><strong>按业务领域定义一套中等粒度的 DomainOperation</strong></p>
+<ul>
+<li>
+<p>比如电商：</p>
+<ul>
+<li>Login</li>
+<li>AddToCart</li>
+<li>CreateOrder</li>
+<li>PayOrder</li>
+<li>CancelOrder</li>
+</ul>
+</li>
+<li>
+<p>而不是细到POST /api/order/create这种协议级别</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>这样：</p>
+<ul>
+<li>TestSpec 足够贴近业务（可读、可复用）</li>
+<li>Binder 负担可控</li>
+<li>Executor 依然通用</li>
+</ul>
+<p>‍</p>
+<p>从这种思路做测试框架有人做过吗？有人做过，而且不少。比如基于模型驱动测试（Model‑Based Testing, MBT）的 Spec Explorer、Robot Framework、测分布式系统一致性的Jepsen</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://WSL0809.github.io/post/hello-gridea/">
+                  <h3 class="post-title">
+                    Hello World
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://WSL0809.github.io</id>
+    <title>sl 的 blog</title>
+    <updated>2026-03-05T10:45:06.497Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://WSL0809.github.io"/>
+    <link rel="self" href="https://WSL0809.github.io/atom.xml"/>
+    <logo>https://WSL0809.github.io/images/avatar.png</logo>
+    <icon>https://WSL0809.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2026, sl 的 blog</rights>
+    <entry>
+        <title type="html"><![CDATA[对 AI Coding 的一些理解（part1）]]></title>
+        <id>https://WSL0809.github.io/post/draft/</id>
+        <link href="https://WSL0809.github.io/post/draft/">
+        </link>
+        <updated>2026-03-05T01:55:19.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="一些名词解释">一些名词解释</h1>
+<p>大语言模型 从 2022 年发展到现在，进步速度超乎所有人的想象，技术几乎每周都在迭代，有人调侃“很多技术如果没跟上，就永远不用学了，因为很快就被淘汰了”。我想在这 按时间线梳理一下我印象中比较重要的一些技术/概念，有些可能已经不再热门，但它代表了当时人们的一些思考。</p>
+<h2 id="大语言模型llm">大语言模型（LLM）</h2>
+<p>LLM（大语言模型）的核心任务只有一个：根据前面出现的所有内容（Context），计算下一个 Token 出现概率最高的是什么。</p>
+<p>例如输入：“床前明月__”，模型根据训练数据，算出“光”字的概率是 99%，“饼”字的概率是 0.01%。于是它输出“光”。</p>
+<p>然后它把“光”加进去，变成“床前明月光”，再预测下一个字（可能是“疑”）。</p>
+<p>这个过程不断重复，直到生成完整的回答。</p>
+<p>明白了这个，后续遇到的大多数问题都能理解了。</p>
+<h2 id="chatbot">chatbot</h2>
+<p>用户和大语言模型交互的一种方式，通过问答的方式。<br>
+<img src="https://WSL0809.github.io/post-images/1772677549869.png" alt="" loading="lazy"></p>
+<h2 id="prompt-engineering">Prompt engineering</h2>
+<p>它主要指通过精心设计和优化输入（即“提示”或 Prompt），来引导生成式 AI 模型（如大型语言模型、图像生成模型等）输出高质量、符合特定要求的结果。</p>
+<ol>
+<li>
+<p>Zero-shot &amp; Few-shot Learning： 给模型提供少量示例，引导其理解并完成全新的任务。</p>
+</li>
+<li>
+<p>Chain-of-Thought, CoT： 在提示中鼓励模型展现推理过程（例如加入神奇的咒语：“让我们一步一步地思考”），这能显著提高语言模型在多步骤逻辑推理问题中的表现。</p>
+</li>
+<li>
+<p>Prompt Chaining： 将一个复杂的任务拆分成多个简单的提示，后一个提示基于前一个提示的输出进行，用于创建更具动态性和上下文感知能力的 AI 工作流。</p>
+</li>
+</ol>
+<h2 id="rag">RAG</h2>
+<p>基于向量检索和全文检索，它是解决大模型不知道企业内部知识（如员工手册、专属代码库、私人文档）最廉价、最高效的方案。</p>
+<h2 id="function-call">function call</h2>
+<p>它是指赋予语言模型连接和操作外部工具、API以及数据库的能力。通过函数调用，大模型不再局限于仅靠预训练数据生成纯文本回答，而是能够动态地获取实时信息、执行实际操作，并以此为基础向用户提供更精确、更具上下文相关性的结果。</p>
+<h3 id="工作原理">工作原理</h3>
+<ol>
+<li>
+<p>定义与注册工具：开发者在向模型发送提示词（Prompt）时，同时附上一组可用函数的描述（通常采用 JSON Schema 格式），包括函数名称、功能描述以及所需的参数类型。</p>
+</li>
+<li>
+<p>模型决策与参数提取：模型分析用户的自然语言输入。如果模型判断需要调用某个外部工具才能回答问题（例如用户问“今天巴黎的天气如何？”），它会暂停生成纯文本回复，转而输出一个包含目标函数名和提取好参数的结构化 JSON 对象（如 {&quot;location&quot;: &quot;Paris&quot;}）。</p>
+</li>
+<li>
+<p>本地执行：开发者的应用程序接收到这个 JSON 后，在本地代码环境或服务器中实际执行对应的函数，或向外部发出 API 请求。</p>
+</li>
+<li>
+<p>生成最终响应：应用程序将函数执行的返回结果（例如真实的温度、天气状况等数据）作为新的上下文发送回给大模型。大模型结合这些真实数据，最终生成一段自然、准确的回答输出给用户。</p>
+</li>
+</ol>
+<h2 id="reasoning-models">Reasoning Models</h2>
+<p>在过去，我们需要在提示词里手动加上“请一步一步地思考”（Chain of Thought）来引导模型。而推理模型在训练阶段就发生了根本变化：</p>
+<p>大规模强化学习： 研发人员不再单纯给模型“喂”人类写好的标准答案，而是给它海量的数学题、编程题，并设定规则：只有最终答案正确（或者代码能跑通），模型才会得到“奖励”。</p>
+<p>自我纠错与试错： 在这种强化学习机制下，模型自己学会了打草稿。在给你最终答案前，它会在内部生成成千上万个隐藏的思维链。它会尝试一种解法，发现行不通，自动推翻重来，进行反思和自我纠错，直到得出有把握的结论。</p>
+<p>从最初的 Prompt（提示词）工程师，需要控制严格的格式才能达到好的效果，大家绞尽脑汁去尝试适配模型，但自推理模型（OpenAI o1、DeepSeek R1）推出后，我们日常交流用的自然语言都能获得不错的效果。</p>
+<h2 id="mcp">mcp</h2>
+<p>MCP 提出了一种标准化的客户端-服务器（Client-Server）架构，将复杂的集成过程简化为 N + M。</p>
+<p>MCP Host（宿主/应用程序）： 比如你正在使用的桌面版 Claude 应用、Cursor 编程编辑器，或者是你自己写的 AI 脚本。</p>
+<p>MCP Client（客户端）： 内置在 Host 应用中，负责与服务器建立通信。</p>
+<p>MCP Server（服务器）： 轻量级的程序，专门负责连接特定的数据源或工具（比如一个专连 GitHub 的服务器，或一个专连本地 SQLite 数据库的服务器）。</p>
+<p>只要两端都遵守 MCP 协议，任何 AI 应用（Host）都可以无缝、即插即用地连接任何数据源（Server）。</p>
+<p>MCP 提供的三大核心能力<br>
+一个标准的 MCP Server 可以向 AI 模型暴露三种标准化的能力：</p>
+<ol>
+<li>
+<p>Resources（资源读取 - 类似标准化的 RAG）： 允许 AI 读取外部数据（如文件内容、API 响应、数据库内容）。AI 可以像读取本地文件一样，读取 URI 格式的远程数据。</p>
+</li>
+<li>
+<p>Tools（工具调用 - 标准化的 Function Call）： 允许 AI 执行动作（如发送邮件、运行脚本、提交代码）。这正是 Function Call 的标准化封装。</p>
+</li>
+<li>
+<p>Prompts（提示词模板）： 服务器可以预定义一些标准的交互模板，让 AI 知道如何更好地处理特定领域的问题。</p>
+</li>
+</ol>
+<h2 id="context-engineering">Context engineering</h2>
+<p>随着 Gemini 等模型将上下文窗口推向百万甚至千万 Token 级别，以及 MCP 协议让动态获取数据变得轻而易举。开发者面临的核心痛点变了：模型能装下海量数据，不代表它能在海量垃圾数据中找到金子。 上下文工程应运而生。</p>
+<p>核心理念：组装而非编写。 开发者构建一个自动化的管道（Pipeline）。这个管道会在用户提问时，动态地从数据库、API、本地文件中抓取最相关的背景信息，组装成一个庞大但结构清晰的 Context 喂给模型。</p>
+<h2 id="agent">agent</h2>
+<p>Agent 和 ChatBot 的区别：</p>
+<ol>
+<li>目标导向： 它不是被动地一问一答，而是为完成某个终极目标而持续运作。</li>
+<li>环境交互： 它可以读取外部信息，并改变外部环境（比如真正在数据库里写入了一条记录，或使用 shell 命令读取了你的代码文件）。</li>
+<li>自主决策： 遇到错误或意外时，它有一定的自我纠错和调整路线的能力，会根据外部环境或者工具调用的反馈自己解决问题，直到达成目标。</li>
+</ol>
+<p>这里就不得不提到 Claude Code 了，一个现象级的 ai coding 产品，现在 agent 的很多概念都是由 Claude Code 首先提出来的。比如下面这三个</p>
+<h3 id="cli-tools">cli tools</h3>
+<p>主流的大语言模型在后训练阶段，针对  shell 命令做了大量的训练，所以模型很擅长使用 shell 命令或者你提供给它的命令行工具，这也是为什么 Claude Code 没有使用基于向量检索的 RAG 而是只使用 grep、sed、awk、find 这种基础命令检索关键字。</p>
+<p>所以如果希望自己的产品能轻易的被 agent 使用，可以先从构建一个易用的 CLI 工具开始。</p>
+<h3 id="subagent">subagent</h3>
+<p>如前文大语言模型章节所述，LLM 的核心机制在于：基于已有的上下文（Context），预测并输出下一个概率最高的 Token。由于模型的上下文窗口（Context Window）存在上限，我们必须尽可能提高输入信息的信噪比，模型才能输出最符合预期的结果。</p>
+<p>在执行复杂任务时，往往会遇到一些消耗大量 Token 且相对独立的子任务（例如：分析海量日志、运行自动化测试等）。对于这类任务，主 Agent通常只需获取最终结论，无需介入繁琐的中间过程。此时，我们可以引入 Sub-agent 来专门处理这些脏活。 Sub-agent 拥有独立且空白的上下文空间，由主 Agent 负责按需启动并注入必要的初始信息。<br>
+<img src="https://WSL0809.github.io/post-images/1772705293323.png" alt="" loading="lazy"></p>
+<h3 id="skills">skills</h3>
+<p>Skills，可以理解为 SOP 文档，它就是 Prompt，只不过变成了一套规范。除此之外，和普通的提示词没什么区别。skills 能办到的，你用手写提示词也可以办到，skills 的意义在于提供了一套规范，大家可以把自己的提示词规范化然后互相分享。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[杂谈 - 关于测试框架]]></title>
+        <id>https://WSL0809.github.io/post/za-tan-guan-yu-ce-shi-kuang-jia/</id>
+        <link href="https://WSL0809.github.io/post/za-tan-guan-yu-ce-shi-kuang-jia/">
+        </link>
+        <updated>2025-12-19T07:27:04.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="抽象测试框架">抽象测试框架</h1>
+<p>自动化测试框架可以抽象出几种角色，任何测试框架都是</p>
+<ul>
+<li><strong>test_data</strong></li>
+<li><strong>data_extractor</strong></li>
+<li><strong>test_executer</strong></li>
+</ul>
+<h2 id="1-抽象视角下的三种角色">1. 抽象视角下的三种角色</h2>
+<p>先假设<strong>被测系统</strong>可以抽象成一个带上下文的函数：</p>
+<pre><code class="language-text">SUT : (Input, Context) -&gt; Output
+</code></pre>
+<p>在这个层面，我们完全不关心 HTTP 还是 gRPC，甚至不关心它是不是代码，只把它当作一个黑盒函数</p>
+<h3 id="1test_data测试意图的抽象表示">1）test_data：测试意图的抽象表示</h3>
+<p>在抽象层面，<strong>test_data 不是文件，不是表格，而是测试意图的一个元素</strong>。在某个前置条件下，对 SUT 做某种操作，应该满足某种性质。也就是说，抽象的 test_data 至少携带三类语义（不是字段，是语义）：</p>
+<ol>
+<li>
+<p><strong>前置世界（上下文）</strong> ：</p>
+<ul>
+<li>系统处于怎样的业务状态（用户有多少余额、订单在什么阶段…）</li>
+</ul>
+</li>
+<li>
+<p>​<strong>操作/刺激</strong>：</p>
+<ul>
+<li>我要对 SUT 施加什么操作（调用哪个能力，传入什么意图）</li>
+</ul>
+</li>
+<li>
+<p>​<strong>期望性质</strong>（不一定是具体值，可以是性质）：</p>
+<ul>
+<li>例如：余额减少但不为负数、列表长度增加 1、满足某个不变量</li>
+</ul>
+</li>
+</ol>
+<p>现在的test_data，本质就是<strong>对 SUT 行为的一条约束 / 场景描述</strong>，而不是任何具体的数据结构。</p>
+<hr>
+<h3 id="2data_extractor从抽象测试用例到可执行测试的映射">2）data_extractor：从抽象测试用例到可执行测试的映射</h3>
+<p>在这个高度，data_extractor 可以看成是一个​<strong>纯函数</strong>：</p>
+<pre><code class="language-text">data_extractor : TestSpecSpace -&gt; ExecutableTestSpace
+</code></pre>
+<p>也就是说，它负责把人类视角 / 业务视角的测试意图，翻译成执行引擎能直接执行的测试程序。</p>
+<p>在抽象层，它做的是<strong>语义层的编译</strong>，而不是单纯的解析文件。</p>
+<p>你可以把它类比成：</p>
+<ul>
+<li>​<strong>编译器</strong>：从高级语言代码 → 中间表示（IR）</li>
+<li><strong>模型到模型的转换器</strong>：从业务场景模型 → 测试执行模型</li>
+</ul>
+<p>它需要完成的抽象责任，比如：</p>
+<ol>
+<li>
+<p>把业务世界的概念映射到调用世界的概念</p>
+<ul>
+<li>如：<code>用户=黄金会员</code>​ → 某个 <code>userId</code> + 获取 token 的方式</li>
+<li>​<code>下单成功</code> → 一系列对 SUT 的调用序列（准备环境 + 下单）</li>
+</ul>
+</li>
+<li>
+<p>把性质翻译成可执行断言或检查步骤</p>
+<ul>
+<li>
+<p>如：<br>
+余额减少但不为负数 →</p>
+<ul>
+<li>Step A: 调前查询余额</li>
+<li>Step B: 调用支付接口</li>
+<li>Step C: 再查余额 + 计算差值 + 判断结果</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>生成一个​<strong>结构化的可执行测试脚本</strong>（仍可非常抽象，不等于具体语言），例如：</p>
+</li>
+</ol>
+<pre><code class="language-text">ExecutableTest =
+  { pre_steps, invoke_steps, post_checks, expected_relations, … }
+</code></pre>
+<p>此时我们完全不关心这个 ExecutableTest 是 Python 对象、XML 文件还是别的什么，只关心它在语义上是一种​<strong>对 SUT 的操作与检查序列</strong>。</p>
+<hr>
+<h3 id="3test_executer解释-运行可执行测试的语义">3）test_executer：解释 / 运行可执行测试的语义</h3>
+<p>在这个高度上，​<strong>test_executer 是一个解释器</strong>：</p>
+<pre><code class="language-text">test_executer : ExecutableTestSpace × SUT -&gt; TestResult
+</code></pre>
+<p>它的职责是：</p>
+<blockquote>
+<p>给我一个可执行测试描述（ExecutableTest）和一套被测系统实现，我根据这个描述去驱动系统，并产生一个带有判定的结果。</p>
+</blockquote>
+<p>这里的关键点：</p>
+<ul>
+<li>
+<p>test_executer ​<strong>只懂 ExecutableTest 这个中间表示的语义</strong>：</p>
+<ul>
+<li>例如：<code>pre_steps</code> 代表前置操作序列</li>
+<li>​<code>invoke_steps</code> 代表主要调用</li>
+<li>​<code>post_checks</code> 代表检查</li>
+</ul>
+</li>
+<li>
+<p>它不需要也不应该理解业务含义，只负责：</p>
+<ul>
+<li>按顺序/规则执行这些步骤</li>
+<li>收集观察到的 Output / 中间状态</li>
+<li>交给检查逻辑（可以包含在 ExecutableTest 里，也可以进一步抽象成 oracle）来判断</li>
+</ul>
+</li>
+</ul>
+<p>换句话说，这个 test_executer 已经抽象成：</p>
+<blockquote>
+<p>一种对测试中间语言的解释器 / 虚拟机。</p>
+</blockquote>
+<p>这在概念上非常像：</p>
+<ul>
+<li>
+<p>Programming Language:</p>
+<ul>
+<li>Source Code（test_data）</li>
+<li>Compiler（data_extractor）</li>
+<li>VM / Runtime（test_executer）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="2-把三层抽象到你完全不关心具体实现的样子">2. 把三层抽象到你完全不关心具体实现的样子</h2>
+<p>如果把刚才的东西压缩成纯概念图，就是：</p>
+<pre><code class="language-text">           +------------------+
+           |   TestSpecSpace  |   （抽象测试规格 / 测试意图）
+           +---------+--------+
+                     |
+                     |  data_extractor : TestSpec -&gt; ExecutableTest
+                     v
+           +-----------------------+
+           | ExecutableTestSpace   |   （测试中间表示 / 测试脚本）
+           +-----------+-----------+
+                       |
+                       |  test_executer : ExecutableTest × SUT -&gt; TestResult
+                       v
+           +------------------+
+           |   TestResult     |   （通过 / 未通过 / 不确定 + 观测信息）
+           +------------------+
+</code></pre>
+<p>这个图里，你关心的只有​<strong>三个集合/空间<strong>和</strong>两个映射</strong>​：</p>
+<ul>
+<li>
+<p>集合（空间）：</p>
+<ul>
+<li>​<code>TestSpecSpace</code>​：抽象 test_data 所在的世界</li>
+<li>​<code>ExecutableTestSpace</code>​：data_extractor 输出的可执行测试世界</li>
+<li>​<code>TestResult</code>：执行结果空间</li>
+</ul>
+</li>
+<li>
+<p>映射：</p>
+<ul>
+<li>​<code>data_extractor</code>：规格 → 可执行测试</li>
+<li>​<code>test_executer</code>：可执行测试 + SUT → 结果</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="1-先搭一个极简的http-领域模型">1. 先搭一个极简的HTTP 领域模型</h2>
+<p>假设被测系统（SUT）里有三类 HTTP 操作（仍然是抽象的）：</p>
+<ul>
+<li>​<code>Login</code>​：<br>
+输入：<code>(username, password)</code>​<br>
+输出：<code>token</code></li>
+<li>​<code>CreateOrder</code>​：<br>
+输入：<code>(token, sku_list)</code>​<br>
+输出：<code>order_id</code></li>
+<li>​<code>PayOrder</code>​：<br>
+输入：<code>(token, order_id)</code>​<br>
+输出：<code>payment_result</code></li>
+</ul>
+<p>在模型层，你可以把每个接口抽象成一个​<strong>操作符</strong>：</p>
+<pre><code class="language-text">Login       : Cred -&gt; Token
+CreateOrder : Token × SkuList -&gt; OrderId
+PayOrder    : Token × OrderId -&gt; PayResult
+</code></pre>
+<p>这些只是函数签名式的类型，没有任何协议细节。</p>
+<hr>
+<h2 id="2-抽象层面的-test_data一条场景规格">2. 抽象层面的 <code>test_data</code>：一条场景规格</h2>
+<p>我们要做的测试场景是：</p>
+<blockquote>
+<p>一个黄金会员成功登录，创建订单并支付成功。</p>
+</blockquote>
+<p>这个时候，​<strong>test_data 不是任何文件，而是一个场景规格（ScenarioSpec）</strong> ​。<br>
+可以把它理解成一个带依赖的​<strong>步骤图 + 性质约束</strong>。</p>
+<h3 id="21-把-test_data-看成一个有向图抽象">2.1 把 test_data 看成一个有向图（抽象）</h3>
+<p>定义一个抽象的 <code>TestSpec</code> 类型：</p>
+<pre><code class="language-text">TestSpec = (Steps, Edges, Properties)
+</code></pre>
+<ul>
+<li>​<code>Steps</code>：一组抽象步骤节点，每个节点只是说明调用哪个操作符、扮演什么角色，不带具体值</li>
+<li>​<code>Edges</code>：步骤之间的依赖关系（谁的输出喂给谁）</li>
+<li>​<code>Properties</code>：对整个场景的期望性质（不是具体字段值，而是判断规则）</li>
+</ul>
+<p>对我们这个 HTTP 场景，一个可能的 <code>TestSpec</code> 是：</p>
+<pre><code class="language-text">Steps =
+  L: Login( user_role = GOLD_MEMBER )
+  C: CreateOrder( actor = L.user, items = {skuA, skuB} )
+  P: PayOrder( actor = L.user, target_order = C.order )
+
+Edges =
+  L.token      -&gt; C.token
+  L.token      -&gt; P.token
+  C.order_id   -&gt; P.order_id
+
+Properties =
+  P.payment_result.status == SUCCESS
+  balance_after(L.user) = balance_before(L.user) - order_amount(C.order)
+</code></pre>
+<p>注意这里：</p>
+<ul>
+<li>​<code>user_role = GOLD_MEMBER</code>​ 这种东西是​<strong>业务语义</strong>，还不是具体 userId</li>
+<li>​<code>skuA</code>​、<code>skuB</code> 也可以只是抽象商品标签，不是具体 sku 编号</li>
+<li>​<code>L.token</code>​、<code>C.order_id</code>​ 是​<strong>符号变量</strong>，只是说P 这个步骤依赖 L、C 的输出</li>
+</ul>
+<p><strong>这就是抽象 test_data</strong>：<br>
+一个图 + 约束的对象，描述了要怎么走场景、场景里数据是怎么流动的、以及期待满足什么性质。<br>
+完全不涉及实现细节。</p>
+<hr>
+<h2 id="3-抽象层面的-data_extractor规格-可执行测试">3. 抽象层面的 <code>data_extractor</code>：规格 → 可执行测试</h2>
+<p>现在看 <code>data_extractor</code>。</p>
+<p>在模型层，它就是一个​<strong>函数</strong>：</p>
+<pre><code class="language-text">data_extractor : TestSpec -&gt; ExecutableTest
+</code></pre>
+<p>我们再给 <code>ExecutableTest</code> 一个抽象定义，比如：</p>
+<pre><code class="language-text">ExecutableTest = (ConcreteSteps, Order, Checkers)
+</code></pre>
+<ul>
+<li>​<code>ConcreteSteps</code>​：带<strong>已绑定参数</strong>的步骤</li>
+<li>​<code>Order</code>：执行顺序 / 拓扑排序结果</li>
+<li>​<code>Checkers</code>：可执行的检查规则（可能还是抽象的表达式树）</li>
+</ul>
+<p>对刚才的那个 <code>TestSpec</code>​，<code>data_extractor</code> 在抽象层大致做三件事：</p>
+<h3 id="31-语义绑定从角色标签到具体值空间的投影">3.1 语义绑定（从角色/标签到具体值空间的投影）</h3>
+<p>例如：</p>
+<pre><code class="language-text">bind_user(GOLD_MEMBER) → some_user_id ∈ UserIdSpace
+bind_sku(skuA)         → some_sku_code_A ∈ SkuSpace
+bind_sku(skuB)         → some_sku_code_B ∈ SkuSpace
+</code></pre>
+<p>这一步的抽象含义是：</p>
+<blockquote>
+<p>从业务标签空间映射到系统可接受的值空间。</p>
+</blockquote>
+<p>我们完全不说这个映射怎么查，是表还是服务，只说它在数学上是一个映射函数。</p>
+<h3 id="32-把依赖图转成可执行步骤-变量绑定">3.2 把依赖图转成可执行步骤 + 变量绑定</h3>
+<p>得到的 <code>ConcreteSteps</code> 可能长这样（仍然抽象）：</p>
+<pre><code class="language-text">ConcreteSteps =
+  L: Login( username = some_user_id, password = some_pwd )
+  C: CreateOrder( token = L.token, sku_list = [sku_code_A, sku_code_B] )
+  P: PayOrder( token = L.token, order_id = C.order_id )
+</code></pre>
+<p>此时你还是只知道：</p>
+<ul>
+<li>每个步骤要调用哪个操作符（Login / CreateOrder / PayOrder）</li>
+<li>每个实参从哪里来（常量、绑定结果、前序步骤输出）</li>
+</ul>
+<h3 id="33-把性质表达式翻译成可执行检查器">3.3 把性质表达式翻译成可执行检查器</h3>
+<p>比如 <code>Properties</code> 中的性质：</p>
+<pre><code class="language-text">P.payment_result.status == SUCCESS
+balance_after(L.user) = balance_before(L.user) - order_amount(C.order)
+</code></pre>
+<p>被 <code>data_extractor</code>​ 翻译成某种<strong>可执行检查表达式树</strong>：</p>
+<pre><code class="language-text">Checkers =
+  checker1: (P.payment_result.status) == SUCCESS
+  checker2: (balance_after) == (balance_before - order_amount)
+</code></pre>
+<p>最终，<code>data_extractor</code>​ 输出一个纯抽象的 <code>ExecutableTest</code>：</p>
+<pre><code class="language-text">ExecutableTest =
+  ConcreteSteps = {L, C, P}
+  Order         = [L, C, P]  （来自 Edges 的拓扑排序）
+  Checkers      = {checker1, checker2}
+</code></pre>
+<p><strong>这里的关键点：</strong></p>
+<ul>
+<li>依然没落到文件、框架，只是在说有一个中间表示（ExecutableTest）</li>
+<li>​<code>ExecutableTest</code>​ 是 <code>test_executer</code> 唯一需要理解的东西</li>
+</ul>
+<hr>
+<h2 id="4-抽象层面的-test_executer解释执行-executabletest">4. 抽象层面的 <code>test_executer</code>：解释/执行 ExecutableTest</h2>
+<p>在模型层，<code>test_executer</code> 是一个解释器/运行时：</p>
+<pre><code class="language-text">test_executer : ExecutableTest × SUT -&gt; TestResult
+</code></pre>
+<p>我们给 <code>TestResult</code> 一个很抽象的定义：</p>
+<pre><code class="language-text">TestResult = (Verdict, Observations)
+</code></pre>
+<ul>
+<li>​<code>Verdict</code> ∈ { PASS, FAIL, INCONCLUSIVE }</li>
+<li>​<code>Observations</code>：执行过程中产生的所有可观测信息（响应、状态快照、时间等）</li>
+</ul>
+<h3 id="41-对依赖的抽象处理方式">4.1 对依赖的抽象处理方式</h3>
+<p>面对 <code>ExecutableTest</code>​ 中的 <code>Order</code>​ + 引用（<code>L.token</code>​、<code>C.order_id</code>​），<code>test_executer</code> 的抽象语义可以描述为：</p>
+<ol>
+<li>按 <code>Order</code>​ <strong>拓扑顺序</strong>执行每个 Step</li>
+<li>每执行完一个 Step，就把它的输出放入一个环境 <code>Env</code> 中</li>
+<li>后续 Step 在执行前，从 <code>Env</code> 里按引用去取值：</li>
+</ol>
+<pre><code class="language-text">Env₀ = ∅
+(L_out, Env₁) = eval_step(L, Env₀, SUT)
+(C_out, Env₂) = eval_step(C, Env₁, SUT)
+(P_out, Env₃) = eval_step(P, Env₂, SUT)
+</code></pre>
+<p>这里的 <code>eval_step</code> 只是一个抽象函数：</p>
+<pre><code class="language-text">eval_step : Step × Env × SUT -&gt; (StepOutput, Env')
+</code></pre>
+<p>它的语义是：</p>
+<blockquote>
+<p>在给定环境下解释这个步骤描述，去驱动 SUT，并把新产生的输出写回环境。</p>
+</blockquote>
+<h3 id="42-对性质检查的抽象处理方式">4.2 对性质检查的抽象处理方式</h3>
+<p>执行完所有 Step 后，<code>test_executer</code>​ 拿着 <code>Env₃</code>​ 和 <code>Checkers</code> 去做判断：</p>
+<pre><code class="language-text">verdict = run_all_checkers(Checkers, Env₃)
+</code></pre>
+<p>其中每个 Checker 是一个​<strong>布尔表达式</strong>：</p>
+<pre><code class="language-text">Checker : Env -&gt; Bool
+</code></pre>
+<p>所有 Checker 都为真 → PASS<br>
+有 Checker 为假 → FAIL<br>
+其他错误/不确定情况 → INCONCLUSIVE（比如依赖步骤执行失败）</p>
+<p>最终得到一个抽象的 <code>TestResult</code>：</p>
+<pre><code class="language-text">TestResult =
+  Verdict = PASS
+  Observations = {
+    (L, L_out),
+    (C, C_out),
+    (P, P_out),
+    logs, metrics, ...
+  }
+</code></pre>
+<hr>
+<h2 id="5-把这一切再对回最开始提到的的三层角色">5. 把这一切再对回最开始提到的的三层角色</h2>
+<ol>
+<li>
+<p>​<strong>​<code>test_data</code>​</strong>​ <strong>（抽象测试数据）</strong></p>
+<ul>
+<li>
+<p>是 <code>TestSpec</code> 空间里的一个元素：</p>
+<ul>
+<li>一个描述场景步骤 + 依赖 + 期望性质的<strong>抽象规格</strong></li>
+</ul>
+</li>
+<li>
+<p>和文件/格式无关，只是一个逻辑对象</p>
+</li>
+</ul>
+</li>
+<li>
+<p>​<strong>​<code>data_extractor</code>​</strong></p>
+<ul>
+<li>
+<p>是一个映射：</p>
+<pre><code class="language-text">TestSpec -&gt; ExecutableTest
+</code></pre>
+</li>
+<li>
+<p>负责：</p>
+<ul>
+<li>把业务标签/角色绑定到具体值空间</li>
+<li>把依赖图转为具体的执行步骤和参数绑定</li>
+<li>把性质表达式转成可执行的 Checker</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>​<strong>​<code>test_executer</code>​</strong></p>
+<ul>
+<li>
+<p>是一个解释器：</p>
+<pre><code class="language-text">ExecutableTest × SUT -&gt; TestResult
+</code></pre>
+</li>
+<li>
+<p>负责：</p>
+<ul>
+<li>按依赖顺序执行步骤</li>
+<li>在环境里传播步骤之间的依赖数据</li>
+<li>执行 Checker 得出最终 Verdict</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>‍</p>
+<hr>
+<h2 id="4-这套框架的通用性边界在哪里">4. 这套框架的通用性边界在哪里？</h2>
+<p>从理论上说，这样设计的通用框架是可行的，而且足够抽象。但也有几个边界和取舍要提前想清楚：</p>
+<h3 id="41-testspec-的抽象度抽太高-vs-抽太低">4.1 TestSpec 的抽象度：抽太高 vs 抽太低</h3>
+<ul>
+<li>
+<p>​<strong>抽太高</strong>：</p>
+<ul>
+<li>所有东西都是抽象操作 + 标签，</li>
+<li>Binder 会变得非常复杂，几乎相当于重写一套业务编排逻辑。</li>
+</ul>
+</li>
+<li>
+<p>​<strong>抽太低</strong>：</p>
+<ul>
+<li>TestSpec 变成HTTP 请求描述清单，又容易退化成普通接口测试框架，失去抽象价值。</li>
+</ul>
+</li>
+</ul>
+<p>​<strong>比较现实的做法</strong>：</p>
+<ul>
+<li>
+<p><strong>按业务领域定义一套中等粒度的 DomainOperation</strong></p>
+<ul>
+<li>
+<p>比如电商：</p>
+<ul>
+<li>Login</li>
+<li>AddToCart</li>
+<li>CreateOrder</li>
+<li>PayOrder</li>
+<li>CancelOrder</li>
+</ul>
+</li>
+<li>
+<p>而不是细到POST /api/order/create这种协议级别</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>这样：</p>
+<ul>
+<li>TestSpec 足够贴近业务（可读、可复用）</li>
+<li>Binder 负担可控</li>
+<li>Executor 依然通用</li>
+</ul>
+<p>‍</p>
+<p>从这种思路做测试框架有人做过吗？有人做过，而且不少。比如基于模型驱动测试（Model‑Based Testing, MBT）的 Spec Explorer、Robot Framework、测分布式系统一致性的Jepsen</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello World]]></title>
+        <id>https://WSL0809.github.io/post/hello-gridea/</id>
+        <link href="https://WSL0809.github.io/post/hello-gridea/">
+        </link>
+        <updated>2018-12-11T16:00:00.000Z</updated>
+        <content type="html"><![CDATA[<p>开始尝试写作</p>
+]]></content>
+    </entry>
+</feed>

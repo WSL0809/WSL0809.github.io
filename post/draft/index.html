@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>对 AI Coding 的一些理解（part1） | sl 的 blog</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://WSL0809.github.io/favicon.ico?v=1772707196028">
+<link rel="stylesheet" href="https://WSL0809.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="一些名词解释
+大语言模型 从 2022 年发展到现在，进步速度超乎所有人的想象，技术几乎每周都在迭代，有人调侃“很多技术如果没跟上，就永远不用学了，因为很快就被淘汰了”。我想在这 按时间线梳理一下我印象中比较重要的一些技术/概念，有些可能已..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://WSL0809.github.io">
+        <img src="https://WSL0809.github.io/images/avatar.png?v=1772707196028" class="site-logo">
+        <h1 class="site-title">sl 的 blog</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://WSL0809.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">对 AI Coding 的一些理解（part1）</h2>
+            <div class="post-date">2026-03-05</div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="一些名词解释">一些名词解释</h1>
+<p>大语言模型 从 2022 年发展到现在，进步速度超乎所有人的想象，技术几乎每周都在迭代，有人调侃“很多技术如果没跟上，就永远不用学了，因为很快就被淘汰了”。我想在这 按时间线梳理一下我印象中比较重要的一些技术/概念，有些可能已经不再热门，但它代表了当时人们的一些思考。</p>
+<h2 id="大语言模型llm">大语言模型（LLM）</h2>
+<p>LLM（大语言模型）的核心任务只有一个：根据前面出现的所有内容（Context），计算下一个 Token 出现概率最高的是什么。</p>
+<p>例如输入：“床前明月__”，模型根据训练数据，算出“光”字的概率是 99%，“饼”字的概率是 0.01%。于是它输出“光”。</p>
+<p>然后它把“光”加进去，变成“床前明月光”，再预测下一个字（可能是“疑”）。</p>
+<p>这个过程不断重复，直到生成完整的回答。</p>
+<p>明白了这个，后续遇到的大多数问题都能理解了。</p>
+<h2 id="chatbot">chatbot</h2>
+<p>用户和大语言模型交互的一种方式，通过问答的方式。<br>
+<img src="https://WSL0809.github.io/post-images/1772677549869.png" alt="" loading="lazy"></p>
+<h2 id="prompt-engineering">Prompt engineering</h2>
+<p>它主要指通过精心设计和优化输入（即“提示”或 Prompt），来引导生成式 AI 模型（如大型语言模型、图像生成模型等）输出高质量、符合特定要求的结果。</p>
+<ol>
+<li>
+<p>Zero-shot &amp; Few-shot Learning： 给模型提供少量示例，引导其理解并完成全新的任务。</p>
+</li>
+<li>
+<p>Chain-of-Thought, CoT： 在提示中鼓励模型展现推理过程（例如加入神奇的咒语：“让我们一步一步地思考”），这能显著提高语言模型在多步骤逻辑推理问题中的表现。</p>
+</li>
+<li>
+<p>Prompt Chaining： 将一个复杂的任务拆分成多个简单的提示，后一个提示基于前一个提示的输出进行，用于创建更具动态性和上下文感知能力的 AI 工作流。</p>
+</li>
+</ol>
+<h2 id="rag">RAG</h2>
+<p>基于向量检索和全文检索，它是解决大模型不知道企业内部知识（如员工手册、专属代码库、私人文档）最廉价、最高效的方案。</p>
+<h2 id="function-call">function call</h2>
+<p>它是指赋予语言模型连接和操作外部工具、API以及数据库的能力。通过函数调用，大模型不再局限于仅靠预训练数据生成纯文本回答，而是能够动态地获取实时信息、执行实际操作，并以此为基础向用户提供更精确、更具上下文相关性的结果。</p>
+<h3 id="工作原理">工作原理</h3>
+<ol>
+<li>
+<p>定义与注册工具：开发者在向模型发送提示词（Prompt）时，同时附上一组可用函数的描述（通常采用 JSON Schema 格式），包括函数名称、功能描述以及所需的参数类型。</p>
+</li>
+<li>
+<p>模型决策与参数提取：模型分析用户的自然语言输入。如果模型判断需要调用某个外部工具才能回答问题（例如用户问“今天巴黎的天气如何？”），它会暂停生成纯文本回复，转而输出一个包含目标函数名和提取好参数的结构化 JSON 对象（如 {&quot;location&quot;: &quot;Paris&quot;}）。</p>
+</li>
+<li>
+<p>本地执行：开发者的应用程序接收到这个 JSON 后，在本地代码环境或服务器中实际执行对应的函数，或向外部发出 API 请求。</p>
+</li>
+<li>
+<p>生成最终响应：应用程序将函数执行的返回结果（例如真实的温度、天气状况等数据）作为新的上下文发送回给大模型。大模型结合这些真实数据，最终生成一段自然、准确的回答输出给用户。</p>
+</li>
+</ol>
+<h2 id="reasoning-models">Reasoning Models</h2>
+<p>在过去，我们需要在提示词里手动加上“请一步一步地思考”（Chain of Thought）来引导模型。而推理模型在训练阶段就发生了根本变化：</p>
+<p>大规模强化学习： 研发人员不再单纯给模型“喂”人类写好的标准答案，而是给它海量的数学题、编程题，并设定规则：只有最终答案正确（或者代码能跑通），模型才会得到“奖励”。</p>
+<p>自我纠错与试错： 在这种强化学习机制下，模型自己学会了打草稿。在给你最终答案前，它会在内部生成成千上万个隐藏的思维链。它会尝试一种解法，发现行不通，自动推翻重来，进行反思和自我纠错，直到得出有把握的结论。</p>
+<p>从最初的 Prompt（提示词）工程师，需要控制严格的格式才能达到好的效果，大家绞尽脑汁去尝试适配模型，但自推理模型（OpenAI o1、DeepSeek R1）推出后，我们日常交流用的自然语言都能获得不错的效果。</p>
+<h2 id="mcp">mcp</h2>
+<p>MCP 提出了一种标准化的客户端-服务器（Client-Server）架构，将复杂的集成过程简化为 N + M。</p>
+<p>MCP Host（宿主/应用程序）： 比如你正在使用的桌面版 Claude 应用、Cursor 编程编辑器，或者是你自己写的 AI 脚本。</p>
+<p>MCP Client（客户端）： 内置在 Host 应用中，负责与服务器建立通信。</p>
+<p>MCP Server（服务器）： 轻量级的程序，专门负责连接特定的数据源或工具（比如一个专连 GitHub 的服务器，或一个专连本地 SQLite 数据库的服务器）。</p>
+<p>只要两端都遵守 MCP 协议，任何 AI 应用（Host）都可以无缝、即插即用地连接任何数据源（Server）。</p>
+<p>MCP 提供的三大核心能力<br>
+一个标准的 MCP Server 可以向 AI 模型暴露三种标准化的能力：</p>
+<ol>
+<li>
+<p>Resources（资源读取 - 类似标准化的 RAG）： 允许 AI 读取外部数据（如文件内容、API 响应、数据库内容）。AI 可以像读取本地文件一样，读取 URI 格式的远程数据。</p>
+</li>
+<li>
+<p>Tools（工具调用 - 标准化的 Function Call）： 允许 AI 执行动作（如发送邮件、运行脚本、提交代码）。这正是 Function Call 的标准化封装。</p>
+</li>
+<li>
+<p>Prompts（提示词模板）： 服务器可以预定义一些标准的交互模板，让 AI 知道如何更好地处理特定领域的问题。</p>
+</li>
+</ol>
+<h2 id="context-engineering">Context engineering</h2>
+<p>随着 Gemini 等模型将上下文窗口推向百万甚至千万 Token 级别，以及 MCP 协议让动态获取数据变得轻而易举。开发者面临的核心痛点变了：模型能装下海量数据，不代表它能在海量垃圾数据中找到金子。 上下文工程应运而生。</p>
+<p>核心理念：组装而非编写。 开发者构建一个自动化的管道（Pipeline）。这个管道会在用户提问时，动态地从数据库、API、本地文件中抓取最相关的背景信息，组装成一个庞大但结构清晰的 Context 喂给模型。</p>
+<h2 id="agent">agent</h2>
+<p>Agent 和 ChatBot 的区别：</p>
+<ol>
+<li>目标导向： 它不是被动地一问一答，而是为完成某个终极目标而持续运作。</li>
+<li>环境交互： 它可以读取外部信息，并改变外部环境（比如真正在数据库里写入了一条记录，或使用 shell 命令读取了你的代码文件）。</li>
+<li>自主决策： 遇到错误或意外时，它有一定的自我纠错和调整路线的能力，会根据外部环境或者工具调用的反馈自己解决问题，直到达成目标。</li>
+</ol>
+<p>这里就不得不提到 Claude Code 了，一个现象级的 ai coding 产品，现在 agent 的很多概念都是由 Claude Code 首先提出来的。比如下面这三个</p>
+<h3 id="cli-tools">cli tools</h3>
+<p>主流的大语言模型在后训练阶段，针对  shell 命令做了大量的训练，所以模型很擅长使用 shell 命令或者你提供给它的命令行工具，这也是为什么 Claude Code 没有使用基于向量检索的 RAG 而是只使用 grep、sed、awk、find 这种基础命令检索关键字。</p>
+<p>所以如果希望自己的产品能轻易的被 agent 使用，可以先从构建一个易用的 CLI 工具开始。</p>
+<h3 id="subagent">subagent</h3>
+<p>如前文大语言模型章节所述，LLM 的核心机制在于：基于已有的上下文（Context），预测并输出下一个概率最高的 Token。由于模型的上下文窗口（Context Window）存在上限，我们必须尽可能提高输入信息的信噪比，模型才能输出最符合预期的结果。</p>
+<p>在执行复杂任务时，往往会遇到一些消耗大量 Token 且相对独立的子任务（例如：分析海量日志、运行自动化测试等）。对于这类任务，主 Agent通常只需获取最终结论，无需介入繁琐的中间过程。此时，我们可以引入 Sub-agent 来专门处理这些脏活。 Sub-agent 拥有独立且空白的上下文空间，由主 Agent 负责按需启动并注入必要的初始信息。<br>
+<img src="https://WSL0809.github.io/post-images/1772705293323.png" alt="" loading="lazy"></p>
+<h3 id="skills">skills</h3>
+<p>Skills，可以理解为 SOP 文档，它就是 Prompt，只不过变成了一套规范。除此之外，和普通的提示词没什么区别。skills 能办到的，你用手写提示词也可以办到，skills 的意义在于提供了一套规范，大家可以把自己的提示词规范化然后互相分享。</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://WSL0809.github.io/post/za-tan-guan-yu-ce-shi-kuang-jia/">
+                  <h3 class="post-title">
+                    杂谈 - 关于测试框架
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
